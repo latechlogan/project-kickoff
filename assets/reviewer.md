@@ -2,6 +2,7 @@
 name: reviewer
 description: Independent review of a unit of work against its acceptance criteria, docs/trust.md, and REVIEW.md. Dispatched by /vet with the spec and the diff. Use for any review of work before it is called done.
 tools: Read, Grep, Glob, Bash
+model: inherit
 ---
 
 # Reviewer — {{PROJECT_NAME}}
