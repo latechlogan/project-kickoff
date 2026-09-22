@@ -48,6 +48,20 @@ sequenceDiagram
 
 Rule: nothing outside the core imports from inside it except through a port. Nothing inside the core imports an adapter.
 
+## Where a new file goes
+
+<!-- The layers and the one direction dependencies point. Each forbidden arrow becomes a dependency rule in the check command (docs/trust.md). Read before adding a file. -->
+
+Dependencies point {{DIRECTION — e.g. inward: adapters → core, never core → adapters}}.
+
+| Kind of code | Goes in | May import from |
+|---|---|---|
+| {{KIND — e.g. business rules, pricing, validation}} | `{{PATH}}` | {{LAYERS_OR_NOTHING}} |
+| {{KIND — e.g. HTTP handlers, CLI commands}} | `{{PATH}}` | {{LAYERS}} |
+| {{KIND — e.g. database, external API clients}} | `{{PATH}}` | {{LAYERS}} |
+
+A file that could sit in two rows is a boundary finding — fix the table or the file. The names in the module map above are the names in the code.
+
 ## Interfaces
 
 - **Primary interface, day one:** {{CLI_REPL_OR_HTTP}} — `{{HOW_TO_INVOKE}}`

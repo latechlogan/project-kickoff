@@ -38,6 +38,34 @@ Tests run against {{FIXTURES_FROM_DATA_MODEL}}; see `docs/data-model.md`.
 - {{QUESTION_A_REVIEWER_ASKS}}
 - {{QUESTION_A_REVIEWER_ASKS}}
 
+## Code quality
+
+Same split. A check that isn't in `{{CHECK_COMMAND}}` isn't enforced; a question that isn't in REVIEW.md isn't asked. There is no style guide: the language's conventions are known, the rows below catch the rest.
+
+**Mechanical (in the check command):**
+
+| Property | Tool | Threshold |
+|---|---|---|
+| Unused locals, params, imports | {{LINT_RULE}} | error |
+| Unused exports, files, dependencies | {{KNIP_OR_VULTURE}} | error |
+| Function size and complexity | {{RULES}} | {{THRESHOLDS — e.g. complexity 10, cognitive 15, 50 lines, depth 3, 4 params}} |
+| Duplication | {{JSCPD}} | {{ZERO_NEW_OR_BASELINE}} |
+| Layering — the arrows in `docs/architecture.md` | {{DEPCRUISE_OR_IMPORT_LINTER}} | error |
+| Name shape | {{NAMING_RULE}} | error |
+
+{{ROWS_WITH_NO_TOOL — "Every row has a tool" or "No tool for X in this ecosystem; the reviewer carries it"}}
+
+Thresholds are tripwires, not targets: these are starting values, logged as decisions, moved once the first slices land.
+
+**Judgment (REVIEW.md `## Readability`) — asked by a reader who was not in the session:**
+
+- Do names use the module map's words? Could you say what a value holds without reading the implementation?
+- Does each function do one thing, at one level of abstraction, and read top to bottom?
+- Do comments say *why*? A comment that narrates the code, or commented-out code, is a finding.
+- Is anything speculative — an abstraction with one caller, an option nobody asked for, handling for a case that cannot happen?
+- Did the diff re-implement something the repo already had?
+- Does every new file sit in the row `docs/architecture.md`'s placement table gives it, and follow the pattern of its neighbours?
+
 ## Mutation testing
 
 {{ENABLED_OR_SKIPPED}} — {{REASON}}. {{IF_ENABLED: Tool: `{{STRYKER_OR_MUTMUT}}`; scope: `{{CORE_PATHS}}`; threshold: {{PERCENT}}; runs via `{{COMMAND}}` from /vet, not the Stop hook.}}
