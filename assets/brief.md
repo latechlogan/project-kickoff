@@ -68,6 +68,7 @@
 - **Pre-push:** runs the same check command
 - **Config:** validated at startup; `.env.example` committed; secrets in {{WHERE}}; CI has {{WHICH_SECRETS}}
 - **Failure modes:** {{EXTERNAL_DEP}} — {{RETRY_TIMEOUT_IDEMPOTENCY}}
+- **Between sessions:** Dependabot security updates {{ON_OR_WHY_NOT}} (user switches it on in repo settings); Renovate deferred
 
 ## Decisions
 
