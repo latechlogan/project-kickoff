@@ -1,6 +1,6 @@
 ---
 name: project-kickoff
-description: Plan a new project before any code or scaffolding exists — the brief and constraints, the stack, the data model, the architecture with diagrams, the interface and UI plan, the trust layer (tests, hooks, an independent reviewer agent), and delivery — in a gated conversation that leaves the plan in docs/ and hands off to workspace-scaffold. Use whenever the user wants to start, plan, kick off, or build something new that has no repo yet — "new project," "I want to build," "let's make a tool that," "start an app/script/site/service" — even if they ask for code directly; the planning comes first and the skill says so. Also use to resume an unfinished kickoff (docs/brief.md exists with an incomplete Kickoff status). Not for adding features to an existing project.
+description: Plan a new project before any code or scaffolding exists — the brief and constraints, the stack, the data model, the architecture with diagrams, the interface and UI plan, the trust layer (tests, code quality gates, hooks, an independent reviewer agent), and delivery — in a gated conversation that leaves the plan in docs/ and hands off to workspace-scaffold. Use whenever the user wants to start, plan, kick off, or build something new that has no repo yet — "new project," "I want to build," "let's make a tool that," "start an app/script/site/service" — even if they ask for code directly; the planning comes first and the skill says so. Also use to resume an unfinished kickoff (docs/brief.md exists with an incomplete Kickoff status). Not for adding features to an existing project.
 ---
 
 # Project Kickoff
@@ -16,6 +16,7 @@ The pain it exists to prevent, in the user's words: projects that come into exis
 3. **Propose, then ask.** Extract everything you can from what the user has already said before asking anything. For each open question, lead with a recommendation and its reason, then ask. A bare question makes the user do the thinking the skill exists to share.
 4. **Familiarity is a real criterion.** Code the user can read is code they can review. When a tool outside their familiarity is clearly better, say so and name the trade; when familiarity is the deciding factor, say that too. Never assume a stack and never hide why one was chosen. See `references/stack-familiarity.md`.
 5. **Phased, gated, resumable.** Each phase ends by writing its file and stopping. The state lives in `docs/`, not in the session, so a kickoff can pause after any phase and resume in a new one. The user decides the pace.
+6. **Clean code is a gate, not a request.** Agents write more code than the job needs, reuse less of what exists, and almost never tidy on their own; a paragraph asking for readable code is the weakest lever there is. So the kickoff never writes a style guide. Everything a machine can check about readability — dead code, size, complexity, duplication, layering — goes in the check command; what needs a reader goes to the reviewer as questions; CLAUDE.md gets only the rules that differ from the language's defaults. See `references/quality-gates.md`.
 
 ## How a phase runs
 
@@ -67,6 +68,8 @@ Read `references/stack-familiarity.md` first. Then propose **one stack with reas
 
 **Dependency policy.** Decide it here and log it: lockfile committed, versions pinned, and the bar above which adding a dependency is a decision the agent logs rather than a thing it just does. Agents add libraries freely; the policy is what stops that.
 
+**Quality gates.** With the linter, pick the tools that make "clean" checkable in this ecosystem — dead code (unused locals *and* unused exports, files, dependencies), function size and complexity, duplication, and layering — from `references/quality-gates.md`. Name them in the stack table; Phase 5 puts them in the check command with thresholds. A row the ecosystem has no tool for is a fact to write down, because it falls to the reviewer.
+
 Writes to `docs/brief.md` `## Stack`.
 
 Skip when: never. Even a script has a language and a runtime.
@@ -103,6 +106,7 @@ Writes `docs/architecture.md` from `assets/architecture.md`.
 - **Container diagram.** Mermaid flowchart of the pieces and what talks to what. Intent, not detail.
 - **Sequence diagram per primary use case.** One per "when the user does X" for the two to four things the system mainly does. These are the fog fix; boxes don't show flow.
 - **Core and adapters.** Name the boundary between the logic and everything that touches the outside world (CLI, HTTP, DB, external APIs, a future UI). Logic behind an interface; each entry point is an adapter. This is the ports-and-adapters pattern; naming it lets the agent apply it consistently.
+- **Where a new file goes.** Name the layers this project has and the one direction dependencies point, then write the placement table: kind of code → directory → what it may import. For an HTTP service the familiar vocabulary is controller → service → repository; that is ports-and-adapters with the controller and repository as adapters and the service as the core, so use the words the user reads and keep the direction. The table is what makes layering enforceable (Phase 5 writes one dependency rule per forbidden arrow) and what makes agent-written code predictable to read: a reader who knows the table knows where to look. The names in the module map are the names in the code; a module, type, or function called something else is a finding.
 - **Primary interface, day one.** How the user interacts with the thing before any UI exists — a CLI, a REPL, an HTTP endpoint. Decide it so the project never lives only in files.
 - **UI plan.** What a UI would show and which ports it would use, written even when no UI is built. Recommend building it only when the lift is small relative to the project; otherwise the plan is enough and the ports keep it cheap.
 - **Observability.** Structured logging from the start, with a debug mode that shows data moving through the sequence diagrams at runtime. This is the other half of not having a magic box.
@@ -125,8 +129,9 @@ Writes `docs/trust.md` from `assets/trust.md` and `.claude/agents/reviewer.md` f
 - **Test layers for this project.** Which of unit, integration, end-to-end exist and why; what each protects against. Don't prescribe a pyramid — decide what this system's failure modes are and test at the layer where they show.
 - **The check command.** One command — `npm run check`, `make check`, whatever fits — that runs format check, lint, typecheck, tests, and a secrets scan. Everything that gates work runs through it: hooks call it, pre-push calls it, CI calls it. One source of truth means CI can never do less than local, which is how the CI-limit problem stops mattering.
 - **Mechanical versus judgment.** Split every check into what a machine verifies (→ the check command and, at scaffold time, hooks) and what needs a reviewer's judgment (→ REVIEW.md). Never both. The scaffold's principle 2 applies unchanged.
+- **Code quality.** Split it the same way. Mechanical, into the check command with each threshold logged as a decision: unused locals and unused exports, orphan modules, function size and complexity, duplication, the layering rules from Phase 4's placement table, name shape. Judgment, into `docs/trust.md` `## Code quality` and from there REVIEW.md: do names use the module map's words, does each function do one thing, do comments say why, is anything speculative (an abstraction with one caller, an option nobody asked for, handling for a case that cannot happen), did the diff re-implement something the repo already had. `references/quality-gates.md` has the tools and starting thresholds by ecosystem. Thresholds are tripwires, not targets: start at the defaults and move them once the first slices land. Do not write a style guide — the language's conventions are already known, the gates catch the rest, and a long CLAUDE.md is how rules get ignored.
 - **Mutation testing.** Coverage says the code ran; mutation score says the tests would notice if it broke — it is the actual measurement of whether green means anything. Recommend it for core logic where wrong-and-green is expensive (Stryker for JS/TS, mutmut for Python); recommend skipping it for glue and scripts. Log the call.
-- **The reviewer agent.** Write `.claude/agents/reviewer.md` for this project from the template: it gets the spec and the diff, reads `docs/trust.md` and REVIEW.md, runs the check command, and never reads the implementer's conversation. Its own context window is what makes it independent. At scaffold time, `/vet` dispatches it — write the `## For /vet` section in `docs/trust.md` so the scaffold knows.
+- **The reviewer agent.** Write `.claude/agents/reviewer.md` for this project from the template: it gets the spec and the diff, reads `docs/trust.md` and REVIEW.md, runs the check command, and never reads the implementer's conversation. Its own context window is what makes it independent — and it is the reader the code quality judgment items are written for, which is why they are questions and not rules. At scaffold time, `/vet` dispatches it — write the `## For /vet` section in `docs/trust.md` so the scaffold knows.
 - **What green doesn't catch.** Say it plainly in the doc: passing checks don't catch "built the wrong thing." The user's review moves from code-level to milestone-level — the sequence diagrams, the acceptance criteria, the slice boundaries — but it doesn't go to zero.
 
 Skip when: a throwaway script may skip mutation testing and the reviewer; it still gets a check command and acceptance criteria, because those cost nothing.
@@ -167,10 +172,13 @@ Invoke `workspace-scaffold`. Tell it the kickoff docs are the answers to its Ste
 | `architecture.md` Build order | ROADMAP.md `## This cycle's focus` |
 | `trust.md` mechanical checks | Hooks (`.claude/settings.json`, user approves) |
 | `trust.md` judgment checks | REVIEW.md |
+| `trust.md` `## Code quality` mechanical rows | Already in the check command; nothing to install |
+| `trust.md` `## Code quality` judgment questions | REVIEW.md `## Readability` |
+| `architecture.md` `## Where a new file goes` | CLAUDE.md `## Where things live` pointer: "read before adding a file" |
 | `trust.md` `## For /vet` | The project's `/vet` body — dispatch the reviewer |
 | `.claude/agents/reviewer.md` | Already in place; scaffold references it, doesn't rewrite it |
 
-Two lines belong in CLAUDE.md `## Working style` regardless of project: build in vertical slices, walking skeleton first; and at each milestone, walk the user through the data path (against the sequence diagrams) before continuing. The second is how understanding stays current after the kickoff ends.
+Three lines belong in CLAUDE.md `## Working style` regardless of project: build in vertical slices, walking skeleton first; at each milestone, walk the user through the data path (against the sequence diagrams) before continuing; and before `/vet`, tidy the diff as its own step — dead code, names, duplication — with Claude Code's bundled `/simplify` or a stranger's read of the diff. The second is how understanding stays current after the kickoff ends; the third exists because a first draft is never the version a reader should get, and agents do not tidy unless told when.
 
 After the scaffold runs, set `## Kickoff status` to complete. The repo is now the plan.
 
@@ -181,6 +189,7 @@ After the scaffold runs, set `## Kickoff status` to complete. The repo is now th
 | Path | Read when |
 |---|---|
 | `references/stack-familiarity.md` | Phase 2 — the user's read/write familiarity by tool |
+| `references/quality-gates.md` | Phases 2 and 5 — tools and starting thresholds for dead code, complexity, duplication, and layering, by ecosystem |
 | `assets/brief.md` | Phase 1 template |
 | `assets/data-model.md` | Phase 3 template |
 | `assets/architecture.md` | Phase 4 template |

@@ -17,4 +17,5 @@ ln -s "$(pwd)/project-kickoff" ~/.claude/skills/project-kickoff
 | --- | --- |
 | `SKILL.md` | The skill itself: principles, phases, and hand-off to the scaffold |
 | `references/stack-familiarity.md` | The user's read/write familiarity by tool, consulted in the stack phase |
+| `references/quality-gates.md` | Tools and starting thresholds that make "clean code" a check — dead code, complexity, duplication, layering — by ecosystem; consulted in the stack and trust phases |
 | `assets/*.md` | Templates the phases write into the project's `docs/` and `.claude/agents/` |

@@ -52,6 +52,7 @@
 | Persistence | {{CHOICE_OR_NONE}} | |
 | Tests | {{CHOICE}} | |
 | Format / lint / types | {{CHOICE}} | |
+| Quality gates | {{DEAD_CODE_COMPLEXITY_DUPLICATION_LAYERING_TOOLS}} | |
 | Hosting | {{CHOICE_OR_NONE}} | |
 
 **Alternative considered:** {{ALTERNATIVE_AND_WHY_NOT}}
