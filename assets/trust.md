@@ -52,8 +52,13 @@ Same split. A check that isn't in `{{CHECK_COMMAND}}` isn't enforced; a question
 | Duplication | {{JSCPD}} | {{ZERO_NEW_OR_BASELINE}} |
 | Layering — the arrows in `docs/architecture.md` | {{DEPCRUISE_OR_IMPORT_LINTER}} | error |
 | Name shape | {{NAMING_RULE}} | error |
+| Dependency advisories | {{AUDIT_COMMAND — e.g. `pnpm audit --audit-level=high`}} | high |
+{{IF_UI: | Accessibility, at source | {{A11Y_LINT — e.g. eslint-plugin-jsx-a11y}} | error |
+| Accessibility, built pages | {{AXE_OR_PA11Y}} — {{IN_CHECK_OR_IN_E2E_FROM_VET}} | WCAG 2.1 AA, 0 violations |
+| Bundle size | `size-limit` | {{KB}} per entry |}}
 
 {{ROWS_WITH_NO_TOOL — "Every row has a tool" or "No tool for X in this ecosystem; the reviewer carries it"}}
+{{IF_NO_UI: UI gates skipped: no UI in v1. Revisit if the UI plan in `docs/architecture.md` is built.}}
 
 Thresholds are tripwires, not targets: these are starting values, logged as decisions, moved once the first slices land.
 
@@ -65,6 +70,35 @@ Thresholds are tripwires, not targets: these are starting values, logged as deci
 - Is anything speculative — an abstraction with one caller, an option nobody asked for, handling for a case that cannot happen?
 - Did the diff re-implement something the repo already had?
 - Does every new file sit in the row `docs/architecture.md`'s placement table gives it, and follow the pattern of its neighbours?
+- For each new dependency: is the name exactly the intended package, is it old enough and used enough to trust, and does the unit of work say why?
+{{IF_UI_WITH_OTHER_USERS: - Does every new interactive element have an accessible name, a role, and a visible focus state? Walk the main flow with the keyboard only before calling it done. Automated checks find about half of real accessibility issues; this is the other half.}}
+
+## Protected paths
+
+The agent never reads or edits these, in any session:
+
+- {{PATH — e.g. `.env`, `.env.*`}}
+- {{PATH — e.g. `secrets/`}}
+- {{PATH — e.g. production migrations, a directory of real data}}
+
+CLAUDE.md's Permissions say "ask first"; this is the enforced form, and it keeps a secret out of the session transcript as well as the repo. At scaffold time the list becomes two entries in `.claude/settings.json` (user approves — hooks run shell commands). A deny rule on Read does not stop `cat .env`, hence the Bash hook:
+
+```json
+{
+  "permissions": {
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Edit(./.env)", "Edit(./.env.*)", "Read(./{{SECRETS_DIR}}/**)", "Edit(./{{SECRETS_DIR}}/**)"]
+  },
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "jq -r '.tool_input.command' | grep -Eq '{{PATH_PATTERN — e.g. \\.env|secrets/}}' && { echo 'blocked: protected path, see docs/trust.md' >&2; exit 2; } || exit 0"
+      }]
+    }]
+  }
+}
+```
 
 ## Mutation testing
 

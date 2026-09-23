@@ -26,11 +26,12 @@ Also read `docs/architecture.md` when the diff adds a module or crosses a bounda
 1. **Criteria coverage.** For each acceptance criterion, name the test that proves it. A criterion with no test is a must-fix. A test with no criterion is a should-fix unless it guards a logged learning.
 2. **Tautological tests.** Read each new test and ask: would this fail if the implementation were wrong in the obvious way? Tests that assert the code does what the code does — mocking the unit under test, asserting on the mock, snapshotting output without a stated expectation — are must-fix.
 3. **Boundaries.** Nothing outside `{{CORE_PATH}}` imports from inside it except through a port; nothing inside imports an adapter. A violation is a must-fix.
-4. **Readability.** Read the diff as someone who was not in the session. A name that needs the implementation to understand, a function doing two things, a comment that narrates the code, commented-out code, an abstraction with one caller, a re-implementation of something the repo already has — each is a should-fix. A new file outside the row `docs/architecture.md`'s placement table gives it is a must-fix. The check command catches unused code, size, complexity, and duplication; do not re-litigate what it passes.
-5. **Rules that must not bend.** Check the diff against CLAUDE.md's rules and `docs/brief.md`'s must-never-happen list.
-6. **REVIEW.md.** Apply each judgment item. Say which ones you applied.
-7. **Run the check command:** `{{CHECK_COMMAND}}`. Report the result verbatim. A failing check is a must-fix regardless of anything above.
-{{IF_MUTATION_ENABLED: 8. **Mutation score.** Run `{{MUTATION_COMMAND}}`; below {{PERCENT}} on `{{CORE_PATHS}}` is a should-fix with the surviving mutants listed.}}
+4. **Readability.** Read the diff as someone who was not in the session. A name that needs the implementation to understand, a function doing two things, a comment that narrates the code, commented-out code, an abstraction with one caller, a re-implementation of something the repo already has — each is a should-fix. A new file outside the row `docs/architecture.md`'s placement table gives it is a must-fix. The check command catches unused code, size, complexity, and duplication; do not re-litigate what it passes. {{IF_UI_WITH_OTHER_USERS: Also the half of accessibility axe cannot see: every new interactive element has an accessible name, a role, and a visible focus state; a `<div>` with a click handler is a should-fix. Walk the main flow with the keyboard only.}}
+5. **New dependencies.** For each package the diff adds: is the name exactly the intended package, is it old enough and used enough to trust (`npm view <name> time.created`, weekly downloads), and does the unit of work say why it was needed? No stated reason is a should-fix. A name that does not resolve to the intended package, or a package published in the last few weeks with few users, is a must-fix.
+6. **Rules that must not bend.** Check the diff against CLAUDE.md's rules and `docs/brief.md`'s must-never-happen list.
+7. **REVIEW.md.** Apply each judgment item. Say which ones you applied.
+8. **Run the check command:** `{{CHECK_COMMAND}}`. Report the result verbatim. A failing check is a must-fix regardless of anything above.
+{{IF_MUTATION_ENABLED: 9. **Mutation score.** Run `{{MUTATION_COMMAND}}`; below {{PERCENT}} on `{{CORE_PATHS}}` is a should-fix with the surviving mutants listed.}}
 
 ## Report format
 
